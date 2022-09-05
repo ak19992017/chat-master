@@ -1,14 +1,22 @@
+import 'package:chat_master/others/chat_users_model.dart';
 import 'package:chat_master/others/constants.dart';
-import 'package:chat_master/others/themes.dart';
+import 'package:chat_master/others/super_provider.dart';
+import 'package:chat_master/screens/chat_details.dart';
 import 'package:chat_master/screens/chats_page.dart';
+import 'package:chat_master/widgets/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  runApp(ChangeNotifierProvider(
-    create: (context) => ThemeProvider(),
-    child: const MyApp(),
-  ));
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => FriendProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -20,10 +28,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Chat master',
       debugShowCheckedModeBanner: false,
-      scrollBehavior: const ScrollBehavior(
-          androidOverscrollIndicator: AndroidOverscrollIndicator.stretch),
       themeMode: themeProvider.selectedThemeMode,
       theme: ThemeData(
+        useMaterial3: true,
         brightness: Brightness.light,
         primarySwatch: AppColors.getMaterialColorFromColor(
             themeProvider.selectedPrimaryColor),
@@ -49,6 +56,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       darkTheme: ThemeData(
+        useMaterial3: true,
         brightness: Brightness.dark,
         primarySwatch: AppColors.getMaterialColorFromColor(
             themeProvider.selectedPrimaryColor),
@@ -66,8 +74,30 @@ class MyApp extends StatelessWidget {
         inputDecorationTheme: InputDecorationTheme(
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
       ),
-      home: const Scaffold(
-        body: ChatsPage(),
+      home: Scaffold(
+        body: ResponsiveLayout(
+          mobileLayout: const ChatsPage(),
+          desktopLayout: Row(
+            children: [
+              const Expanded(
+                flex: 3,
+                child: ChatsPage(),
+              ),
+              Expanded(
+                flex: 6,
+                child: ChatDetails(
+                  user: ChatUsers(
+                    name: "Jane Russel",
+                    location: 'London, UK',
+                    messageText: "Awesome Setup",
+                    imageURL: "assets/profiles/userImage1.png",
+                    time: "Now",
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

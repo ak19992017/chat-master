@@ -1,6 +1,7 @@
 import 'package:chat_master/others/chat_users_model.dart';
-import 'package:chat_master/widgets/conversation_list.dart';
+import 'package:chat_master/others/super_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ConversationsScreen extends StatefulWidget {
   const ConversationsScreen({Key? key}) : super(key: key);
@@ -12,22 +13,24 @@ class ConversationsScreen extends StatefulWidget {
 class _ConversationsScreenState extends State<ConversationsScreen> {
   @override
   Widget build(BuildContext context) {
+    var friendProvider = context.watch<FriendProvider>();
+    int selectedIndex = friendProvider.friendSelectedToChat;
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          // Header UI
-          const Padding(
-            padding: EdgeInsets.only(left: 16, right: 16, top: 10),
-            child: Text(
-              "Messages",
-              style: TextStyle(fontSize: 52, fontWeight: FontWeight.bold),
-            ),
-          ),
+          // // Header UI
+          // const Padding(
+          //   padding: EdgeInsets.only(left: 16, right: 16, top: 10),
+          //   child: Text(
+          //     "Messages",
+          //     style: TextStyle(fontSize: 52, fontWeight: FontWeight.bold),
+          //   ),
+          // ),
           // Search bar
           Padding(
-            padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
+            padding: const EdgeInsets.only(top: 16),
             child: TextField(
               decoration: InputDecoration(
                 hintText: "Search...",
@@ -55,9 +58,38 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
               itemCount: chatUsers.length,
               padding: const EdgeInsets.only(top: 20, bottom: 80),
               itemBuilder: (context, index) {
-                return ConversationList(
-                  user: chatUsers[index],
-                  isMessageRead: (index % 3 == 0) ? true : false,
+                return ListTile(
+                  onTap: (() {
+                    setState(() => selectedIndex = index);
+                    friendProvider.setFriendSelectedToChat(index);
+                  }),
+                  tileColor: selectedIndex == index
+                      ? Colors.grey[500]
+                      : Colors.transparent,
+                  leading: Stack(
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: AssetImage(chatUsers[index].imageURL),
+                        // maxRadius: 35,
+                      ),
+                      if ((index % 3 == 0) == false)
+                        Positioned(
+                          bottom: 2,
+                          right: 2,
+                          child: Container(
+                            height: 15,
+                            width: 15,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.green,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  title: Text(chatUsers[index].name),
+                  subtitle: Text(chatUsers[index].messageText),
+                  trailing: Text(chatUsers[index].time),
                 );
               },
             ),

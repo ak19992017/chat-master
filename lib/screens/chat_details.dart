@@ -1,9 +1,14 @@
+// ignore_for_file: unused_import
+
+import 'package:chat_master/others/api_emoji.dart';
 import 'package:chat_master/others/chat_message_model.dart';
 import 'package:chat_master/others/chat_users_model.dart';
-import 'package:chat_master/screens/profile_screen.dart';
+import 'package:chat_master/others/super_provider.dart';
+import 'package:chat_master/widgets/button.dart';
 import 'package:chat_master/widgets/circular_icon_button.dart';
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ChatDetails extends StatefulWidget {
   final ChatUsers user;
@@ -15,35 +20,34 @@ class ChatDetails extends StatefulWidget {
 }
 
 class _ChatDetailsState extends State<ChatDetails> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
+    var friendProvider = context.watch<FriendProvider>();
+    ChatUsers user = chatUsers[friendProvider.friendSelectedToChat];
     return SafeArea(
       child: Scaffold(
+        key: _scaffoldKey,
         appBar: AppBar(
           elevation: 0,
-          // automaticallyImplyLeading: false,
-          leading: IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(
-              EvaIcons.arrowBack,
-              color: Colors.white,
-            ),
-            tooltip: 'Back',
-          ),
+          automaticallyImplyLeading: false,
+          // leading: IconButton(
+          //   onPressed: () => Navigator.pop(context),
+          //   icon: const Icon(
+          //     EvaIcons.arrowBack,
+          //     color: Colors.white,
+          //   ),
+          //   tooltip: 'Back',
+          // ),
           flexibleSpace: Row(
             children: <Widget>[
               const SizedBox(width: 50),
               GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProfileScreen(user: widget.user),
-                    ),
-                  );
+                  _scaffoldKey.currentState!.openEndDrawer();
                 },
                 child: CircleAvatar(
-                  backgroundImage: AssetImage(widget.user.imageURL),
+                  backgroundImage: AssetImage(user.imageURL),
                   maxRadius: 25,
                 ),
               ),
@@ -54,17 +58,17 @@ class _ChatDetailsState extends State<ChatDetails> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text(
-                      widget.user.name,
+                      user.name,
                       style: const TextStyle(
                         fontSize: 18,
-                        color: Colors.white,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const Text(
-                      "Online",
-                      style: TextStyle(fontSize: 13, color: Colors.white),
-                    ),
+                    if ((friendProvider.friendSelectedToChat % 3 == 0) == false)
+                      const Text(
+                        "Online",
+                        style: TextStyle(fontSize: 13),
+                      ),
                   ],
                 ),
               ),
@@ -73,34 +77,26 @@ class _ChatDetailsState extends State<ChatDetails> {
           actions: [
             IconButton(
               onPressed: () {},
-              icon: const Icon(
-                EvaIcons.video,
-                color: Colors.white,
-              ),
+              icon: const Icon(EvaIcons.video),
               tooltip: 'Video call',
             ),
             IconButton(
               onPressed: () {},
-              icon: const Icon(
-                EvaIcons.phone,
-                color: Colors.white,
-              ),
+              icon: const Icon(EvaIcons.phone),
               tooltip: 'Voice call',
             ),
             PopupMenuButton<String>(
               // offset: const Offset(-40, 0),
               tooltip: 'More options',
               enableFeedback: true,
-              icon: const Icon(EvaIcons.moreVertical, color: Colors.white),
+              icon: const Icon(EvaIcons.moreVertical),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
               onSelected: handleClick,
               itemBuilder: (context) {
                 return {
-                  'Block',
                   'View profile',
-                  'Media, links and docs',
                   'Search',
                   'Mute notifications',
                 }.map((String choice) {
@@ -129,8 +125,8 @@ class _ChatDetailsState extends State<ChatDetails> {
                       left: messages[index].messageType == "receiver" ? 14 : 60,
                       right:
                           messages[index].messageType == "receiver" ? 60 : 14,
-                      top: 10,
-                      bottom: 10,
+                      top: 6,
+                      bottom: 6,
                     ),
                     child: Align(
                       alignment: (messages[index].messageType == "receiver"
@@ -150,7 +146,7 @@ class _ChatDetailsState extends State<ChatDetails> {
                             child: Text(
                               messages[index].messageContent,
                               style: TextStyle(
-                                fontSize: 20,
+                                fontSize: 18,
                                 color:
                                     (messages[index].messageType == "receiver"
                                         ? Colors.black
@@ -166,7 +162,7 @@ class _ChatDetailsState extends State<ChatDetails> {
                                     .toString()
                                     .padLeft(2, "0"),
                             // style: const TextStyle(color: Colors.black45),
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -183,13 +179,30 @@ class _ChatDetailsState extends State<ChatDetails> {
                   color: Colors.white,
                   boxShadow: kElevationToShadow[3],
                 ),
-                margin: const EdgeInsets.only(left: 5, bottom: 10),
+                margin: const EdgeInsets.only(left: 5, bottom: 10, right: 5),
                 // height: 60,
                 constraints: const BoxConstraints(minHeight: 60),
                 width: MediaQuery.of(context).size.width - 80,
                 child: Row(
                   children: [
-                    const SizedBox(width: 15),
+                    // const SizedBox(width: 15),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.emoji_emotions_rounded,
+                        color: Colors.black,
+                      ),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30)),
+                          context: context,
+                          constraints: const BoxConstraints(maxWidth: 500),
+                          builder: (context) {
+                            return const MyEmoji();
+                          },
+                        );
+                      },
+                    ),
                     const Expanded(
                       child: TextField(
                         keyboardType: TextInputType.multiline,
@@ -213,6 +226,7 @@ class _ChatDetailsState extends State<ChatDetails> {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30)),
                           context: context,
+                          constraints: const BoxConstraints(maxWidth: 500),
                           builder: (context) {
                             return Column(
                               children: [
@@ -254,7 +268,7 @@ class _ChatDetailsState extends State<ChatDetails> {
                                     ),
                                     CircularIconButton(
                                       label: 'Location',
-                                      icon: EvaIcons.pinOutline,
+                                      icon: EvaIcons.pin,
                                       color: Colors.green,
                                       onPress: () {},
                                     ),
@@ -272,19 +286,78 @@ class _ChatDetailsState extends State<ChatDetails> {
                         );
                       },
                     ),
+                    FloatingActionButton(
+                      onPressed: () {},
+                      child: const Icon(
+                        Icons.send,
+                        color: Colors.white,
+                      ),
+                      backgroundColor: Theme.of(context).primaryColor,
+                    ),
                   ],
                 ),
               ),
             ),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {},
-          child: const Icon(
-            Icons.send,
-            color: Colors.white,
-          ),
-          backgroundColor: Theme.of(context).primaryColor,
+        endDrawer: ClipRRect(
+          borderRadius: const BorderRadius.all(Radius.circular(50)),
+          child: Drawer(
+              width: MediaQuery.of(context).size.width / 3,
+              child: Column(
+                children: [
+                  ListView(
+                    shrinkWrap: true,
+                    children: <Widget>[
+                      UserAccountsDrawerHeader(
+                        currentAccountPicture: ClipRRect(
+                          borderRadius: BorderRadius.circular(30),
+                          child: Image.asset(
+                            user.imageURL,
+                            width: 200,
+                            height: 200,
+                          ),
+                        ),
+                        // curve: Curves.bounceOut,
+                        // child: Text('Drawer Header'),
+                        decoration: const BoxDecoration(
+                          color: Colors.redAccent,
+                        ),
+                        accountEmail: const Text('ak19992017@gmail.com'),
+                        accountName: Text(user.name),
+                      ),
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(EvaIcons.attach2),
+                          title: const Text('Media, links and docs'),
+                          onTap: () {},
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.block),
+                          title: const Text('Block '),
+                          onTap: () {},
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.thumb_down),
+                          title: const Text('Report'),
+                          onTap: () {},
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(EvaIcons.trash2),
+                          title: const Text('Delete chat'),
+                          onTap: () {},
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              )),
         ),
       ),
     );
@@ -292,6 +365,11 @@ class _ChatDetailsState extends State<ChatDetails> {
 
   void handleClick(String value) {
     switch (value) {
+      case 'View profile':
+        {
+          _scaffoldKey.currentState!.openEndDrawer();
+          break;
+        }
       default:
         break;
     }

@@ -1,6 +1,5 @@
 class ChatUsers {
   String name;
-
   String location;
   String messageText;
   String imageURL;
